@@ -52,16 +52,17 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
       <button
         type="button"
         onClick={() => setView('detail')}
-        className="flex w-full items-center gap-2 rounded-md border border-border bg-bg px-3 py-2 text-left transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        title={exerciseName}
+        className="flex w-full items-start gap-2 rounded-md border border-border bg-bg px-3 py-2 text-left transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {exercise && (
           <span
-            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
             style={{ backgroundColor: bodyPartColors[exercise.bodyPart] }}
             aria-hidden="true"
           />
         )}
-        <span className="truncate text-sm font-medium text-text-primary">{exerciseName}</span>
+        <span className="line-clamp-2 text-sm font-medium text-text-primary">{exerciseName}</span>
       </button>
 
       <Modal

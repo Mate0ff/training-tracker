@@ -74,7 +74,7 @@ export function DayColumn({
       <Button
         type="button"
         variant="secondary"
-        size="sm"
+        size="md"
         onClick={() => setIsAddOpen(true)}
         className="w-full"
       >
