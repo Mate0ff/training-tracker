@@ -1,28 +1,22 @@
 import type { Exercise } from '../../../lib/data/types';
 
-// PROPOSAL — not imported anywhere in this feature's own runtime code.
+// This is the live 40-exercise catalog: `seedExercises` in
+// `src/lib/data/mockApi.ts` (owned by Agent 1 — also imported from there by
+// `electron/ipc/persistence.ts` for the real, better-sqlite3-backed
+// implementation) re-exports this array directly, so editing it here is
+// what changes the catalog everywhere.
 //
-// Per docs/CONTRACTS.md, the single exercise catalog is `seedExercises` in
-// `src/lib/data/mockApi.ts` (owned by Agent 1 — it's also imported directly
-// by `electron/ipc/persistence.ts` for the real, better-sqlite3-backed
-// implementation). Agent 2 (Exercise Library) doesn't own that file, so
-// rather than fork the catalog into a second, competing list inside
-// `src/features/exercise-library/**`, this file curates the ~40-exercise
-// catalog as a **handoff artifact** for the orchestrator/Agent 1 to merge
-// into `seedExercises`.
+// The first 8 entries below are byte-for-byte the exercises originally
+// seeded in `mockApi.ts` (same ids, unchanged), since `seedLogEntries()` in
+// that file references their ids. The remaining ~32 were added by Agent 2
+// (Exercise Library), bringing the catalog to 5 exercises per body part
+// across all 8 `BodyPart` values. All instruction text was written from
+// scratch for this app (see `../assets/LICENSE_NOTES.md`).
 //
-// The first 8 entries below are byte-for-byte the exercises already seeded
-// in `mockApi.ts` (same ids, unchanged), since `seedLogEntries()` in that
-// file references their ids — merging must not break those log entries.
-// The remaining ~32 are new, bringing the catalog to 5 exercises per body
-// part across all 8 `BodyPart` values. All instruction text was written
-// from scratch for this app (see `../assets/LICENSE_NOTES.md`).
-//
-// This feature's own components (LibraryPage, ExercisePicker) read
-// exercises via `getApi().listExercises()`, per CONTRACTS.md — never from
-// this file directly — so they'll pick up the full catalog automatically
-// once this is merged, with zero changes needed on the Exercise Library
-// side.
+// This feature's own components (LibraryPage, ExercisePicker) don't import
+// this file directly — they read exercises via `getApi().listExercises()`,
+// per CONTRACTS.md — so they pick up whatever this array contains
+// automatically.
 
 function youtubeSearchUrl(name: string): string {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${name} exercise tutorial`)}`;
