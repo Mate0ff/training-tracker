@@ -10,15 +10,29 @@ export interface MaterializationCandidate {
 }
 
 /**
+ * Extracts the "YYYY-MM-DD" calendar date a plan was created on from its
+ * `createdAt` ISO timestamp. Deliberately a plain string slice (ISO 8601
+ * always starts with the date) rather than a parse-then-reformat through
+ * date-fns, which would convert to local time and could shift the date —
+ * `createdAt` is compared purely as a calendar date here, the same way
+ * `WorkoutLogEntry.date` is treated everywhere else in this app.
+ */
+function createdDateOf(plan: RecurringPlan): string {
+  return plan.createdAt.slice(0, 10);
+}
+
+/**
  * Pure planning step for ensureWeekMaterialized(): given a week's active
  * plans and the WorkoutLogEntry rows that already exist for that week,
  * returns the entries that still need to be created — one per active plan
- * whose (date, recurringPlanId) pair isn't already present.
+ * whose (date, recurringPlanId) pair isn't already present, and whose
+ * occurrence date is on or after the day the plan was created (a plan
+ * never backfills weeks before it existed, even when a past week is
+ * (re-)viewed and this runs again for it).
  *
  * Defined once here and called from both src/lib/data/mockApi.ts and
- * electron/ipc/persistence.ts so the idempotency rule ("skip if an entry
- * already exists for this plan on this date") is never duplicated /
- * allowed to drift between the two API implementations.
+ * electron/ipc/persistence.ts so this rule is never duplicated / allowed
+ * to drift between the two API implementations.
  */
 export function planMaterialization(
   weekStart: string,
@@ -33,6 +47,7 @@ export function planMaterialization(
 
   return activePlans
     .map((plan) => ({ plan, date: getDateForWeekday(weekStart, plan.dayOfWeek) }))
+    .filter(({ plan, date }) => date >= createdDateOf(plan))
     .filter(({ plan, date }) => !existingKeys.has(`${date}::${plan.id}`))
     .map(({ plan, date }) => ({
       date,
