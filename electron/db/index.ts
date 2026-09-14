@@ -42,7 +42,34 @@ function migrate(database: WorkoutDatabase) {
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_workout_log_entries_date ON workout_log_entries (date);
+
+    -- "Repeat weekly" plans — see RecurringPlan in src/lib/data/types.ts.
+    -- day_of_week: 0 = Monday ... 6 = Sunday (NOT JS Date.getDay()'s 0 = Sunday).
+    CREATE TABLE IF NOT EXISTS recurring_plans (
+      id TEXT PRIMARY KEY,
+      exercise_id TEXT NOT NULL,
+      day_of_week INTEGER NOT NULL,
+      sets TEXT NOT NULL,
+      notes TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
   `);
+
+  // recurring_plan_id was added after workout_log_entries already shipped,
+  // so it's applied via ALTER TABLE (not the CREATE TABLE above) — that
+  // keeps existing databases intact on upgrade. Guarded via PRAGMA
+  // table_info so this stays idempotent on both a fresh db and one that
+  // already has the column.
+  const columns = database.prepare('PRAGMA table_info(workout_log_entries)').all() as {
+    name: string;
+  }[];
+  if (!columns.some((c) => c.name === 'recurring_plan_id')) {
+    database.exec('ALTER TABLE workout_log_entries ADD COLUMN recurring_plan_id TEXT');
+  }
+  database.exec(
+    'CREATE INDEX IF NOT EXISTS idx_workout_log_entries_recurring_plan_id ON workout_log_entries (recurring_plan_id)',
+  );
 }
 
 export function closeDb() {

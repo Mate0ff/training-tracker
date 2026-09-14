@@ -40,6 +40,30 @@ export interface WorkoutLogEntry {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  /** Set when this entry was auto-created from a RecurringPlan by ensureWeekMaterialized(). Undefined = one-off manual entry. */
+  recurringPlanId?: string;
+}
+
+/**
+ * A "repeat weekly" plan: a template that auto-materializes into a
+ * WorkoutLogEntry on the same weekday every week going forward, via
+ * ensureWeekMaterialized(). Creating a plan does not itself create any
+ * WorkoutLogEntry.
+ */
+export interface RecurringPlan {
+  id: string;
+  exerciseId: string;
+  /**
+   * 0 = Monday ... 6 = Sunday — matches the week grid's Mon-Sun column
+   * ordering. This is NOT the same as JS's `Date.getDay()` (0 = Sunday) —
+   * convert carefully at every boundary.
+   */
+  dayOfWeek: number;
+  sets: SetEntry[];
+  notes?: string;
+  /** False once the user "stops repeating". Inactive plans no longer materialize new entries; past materialized entries are untouched. */
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface DaySummary {

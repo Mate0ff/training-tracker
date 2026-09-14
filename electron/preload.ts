@@ -16,6 +16,11 @@ const trackerApi: WorkoutTrackerApi = {
   deleteLogEntry: (id) => ipcRenderer.invoke('trackerApi:deleteLogEntry', id),
   getWeekSummary: (weekStartDate) => ipcRenderer.invoke('trackerApi:getWeekSummary', weekStartDate),
   getMonthSummary: (month) => ipcRenderer.invoke('trackerApi:getMonthSummary', month),
+  listRecurringPlans: () => ipcRenderer.invoke('trackerApi:listRecurringPlans'),
+  createRecurringPlan: (input) => ipcRenderer.invoke('trackerApi:createRecurringPlan', input),
+  deactivateRecurringPlan: (id) => ipcRenderer.invoke('trackerApi:deactivateRecurringPlan', id),
+  ensureWeekMaterialized: (weekStart) =>
+    ipcRenderer.invoke('trackerApi:ensureWeekMaterialized', weekStart),
 };
 
 contextBridge.exposeInMainWorld('trackerApi', trackerApi);

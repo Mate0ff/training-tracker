@@ -4,7 +4,8 @@ import { getDb } from '../db';
 import { seedExercises } from '../../src/lib/data/mockApi';
 import { computeMonthSummary, computeWeekSummary } from '../../src/lib/data/summaries';
 import { getCurrentMonthRange, getCurrentWeekRange } from '../../src/lib/data/dateUtils';
-import type { BodyPart, SetEntry, WorkoutLogEntry } from '../../src/lib/data/types';
+import { planMaterialization } from '../../src/lib/data/recurring';
+import type { BodyPart, RecurringPlan, SetEntry, WorkoutLogEntry } from '../../src/lib/data/types';
 
 // Real implementation of WorkoutTrackerApi, backed by better-sqlite3.
 // Registered as ipcMain handlers here; bridged to the renderer as
@@ -19,6 +20,17 @@ interface LogEntryRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  recurring_plan_id: string | null;
+}
+
+interface RecurringPlanRow {
+  id: string;
+  exercise_id: string;
+  day_of_week: number;
+  sets: string;
+  notes: string | null;
+  is_active: number;
+  created_at: string;
 }
 
 function rowToEntry(row: LogEntryRow): WorkoutLogEntry {
@@ -30,6 +42,19 @@ function rowToEntry(row: LogEntryRow): WorkoutLogEntry {
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    recurringPlanId: row.recurring_plan_id ?? undefined,
+  };
+}
+
+function rowToPlan(row: RecurringPlanRow): RecurringPlan {
+  return {
+    id: row.id,
+    exerciseId: row.exercise_id,
+    dayOfWeek: row.day_of_week,
+    sets: JSON.parse(row.sets) as SetEntry[],
+    notes: row.notes ?? undefined,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
   };
 }
 
@@ -73,8 +98,8 @@ export function registerPersistenceHandlers() {
       const id = randomUUID();
       const now = new Date().toISOString();
       db.prepare(
-        `INSERT INTO workout_log_entries (id, date, exercise_id, sets, notes, created_at, updated_at)
-         VALUES (@id, @date, @exerciseId, @sets, @notes, @createdAt, @updatedAt)`,
+        `INSERT INTO workout_log_entries (id, date, exercise_id, sets, notes, created_at, updated_at, recurring_plan_id)
+         VALUES (@id, @date, @exerciseId, @sets, @notes, @createdAt, @updatedAt, @recurringPlanId)`,
       ).run({
         id,
         date: entry.date,
@@ -83,6 +108,7 @@ export function registerPersistenceHandlers() {
         notes: entry.notes ?? null,
         createdAt: now,
         updatedAt: now,
+        recurringPlanId: entry.recurringPlanId ?? null,
       });
       const created: WorkoutLogEntry = { ...entry, id, createdAt: now, updatedAt: now };
       return created;
@@ -135,5 +161,76 @@ export function registerPersistenceHandlers() {
       )
       .all(start, end);
     return computeMonthSummary(month, start, end, rows.map(rowToEntry), bodyPartOf);
+  });
+
+  ipcMain.handle('trackerApi:listRecurringPlans', async () => {
+    const rows = db
+      .prepare<[], RecurringPlanRow>('SELECT * FROM recurring_plans ORDER BY created_at ASC')
+      .all();
+    return rows.map(rowToPlan);
+  });
+
+  ipcMain.handle(
+    'trackerApi:createRecurringPlan',
+    async (_event, input: Omit<RecurringPlan, 'id' | 'createdAt' | 'isActive'>) => {
+      const id = randomUUID();
+      const now = new Date().toISOString();
+      db.prepare(
+        `INSERT INTO recurring_plans (id, exercise_id, day_of_week, sets, notes, is_active, created_at)
+         VALUES (@id, @exerciseId, @dayOfWeek, @sets, @notes, 1, @createdAt)`,
+      ).run({
+        id,
+        exerciseId: input.exerciseId,
+        dayOfWeek: input.dayOfWeek,
+        sets: JSON.stringify(input.sets),
+        notes: input.notes ?? null,
+        createdAt: now,
+      });
+      const created: RecurringPlan = { ...input, id, isActive: true, createdAt: now };
+      return created;
+    },
+  );
+
+  ipcMain.handle('trackerApi:deactivateRecurringPlan', async (_event, id: string) => {
+    db.prepare('UPDATE recurring_plans SET is_active = 0 WHERE id = ?').run(id);
+  });
+
+  ipcMain.handle('trackerApi:ensureWeekMaterialized', async (_event, weekStart: string) => {
+    const { end } = getCurrentWeekRange(new Date(`${weekStart}T00:00:00`));
+
+    const existingThisWeek = db
+      .prepare<[string, string], LogEntryRow>(
+        'SELECT * FROM workout_log_entries WHERE date >= ? AND date <= ?',
+      )
+      .all(weekStart, end)
+      .map(rowToEntry);
+
+    const activePlans = db
+      .prepare<[], RecurringPlanRow>('SELECT * FROM recurring_plans WHERE is_active = 1')
+      .all()
+      .map(rowToPlan);
+
+    const candidates = planMaterialization(weekStart, activePlans, existingThisWeek);
+
+    const insert = db.prepare(
+      `INSERT INTO workout_log_entries (id, date, exercise_id, sets, notes, created_at, updated_at, recurring_plan_id)
+       VALUES (@id, @date, @exerciseId, @sets, @notes, @createdAt, @updatedAt, @recurringPlanId)`,
+    );
+    const now = new Date().toISOString();
+    const insertAll = db.transaction((rows: typeof candidates) => {
+      for (const candidate of rows) {
+        insert.run({
+          id: randomUUID(),
+          date: candidate.date,
+          exerciseId: candidate.exerciseId,
+          sets: JSON.stringify(candidate.sets),
+          notes: candidate.notes ?? null,
+          createdAt: now,
+          updatedAt: now,
+          recurringPlanId: candidate.recurringPlanId,
+        });
+      }
+    });
+    insertAll(candidates);
   });
 }

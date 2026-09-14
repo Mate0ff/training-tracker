@@ -40,6 +40,19 @@ export interface WorkoutLogEntry {
   id: string; date: string; // "YYYY-MM-DD"
   exerciseId: string; sets: SetEntry[]; notes?: string;
   createdAt: string; updatedAt: string;
+  recurringPlanId?: string; // set when auto-created from a RecurringPlan; undefined = one-off manual entry
+}
+
+// "Repeat weekly" — a template that auto-materializes into a WorkoutLogEntry
+// on the same weekday every week, via ensureWeekMaterialized() below.
+export interface RecurringPlan {
+  id: string;
+  exerciseId: string;
+  dayOfWeek: number; // 0 = Monday ... 6 = Sunday — NOT JS Date.getDay()'s 0 = Sunday. Easy off-by-one, double-check at every boundary.
+  sets: SetEntry[];
+  notes?: string;
+  isActive: boolean; // false once the user "stops repeating"; inactive plans stop materializing new entries but past ones are untouched
+  createdAt: string;
 }
 
 export interface DaySummary { date: string; totalExercises: number; totalSets: number; totalVolume: number; bodyParts: BodyPart[]; }
@@ -67,8 +80,42 @@ export interface WorkoutTrackerApi {
   deleteLogEntry(id: string): Promise<void>;
   getWeekSummary(weekStartDate: string): Promise<WeekSummary>;
   getMonthSummary(month: string): Promise<MonthSummary>;
+
+  // "Repeat weekly"
+  listRecurringPlans(): Promise<RecurringPlan[]>;
+  createRecurringPlan(input: Omit<RecurringPlan,'id'|'createdAt'|'isActive'>): Promise<RecurringPlan>; // creates the plan only — does NOT itself create a WorkoutLogEntry
+  deactivateRecurringPlan(id: string): Promise<void>; // sets isActive false; does not touch already-created WorkoutLogEntry rows
+  ensureWeekMaterialized(weekStart: string): Promise<void>; // idempotent — see below
 }
 ```
+
+### "Repeat weekly" (RecurringPlan)
+
+A `RecurringPlan` is a template, not a schedule of entries — creating one
+with `createRecurringPlan` does not create any `WorkoutLogEntry`. Entries
+get created lazily by `ensureWeekMaterialized(weekStart)`: for every active
+plan, it resolves `dayOfWeek` to that week's actual date (via
+`getDateForWeekday` in `dateUtils.ts`) and creates a `WorkoutLogEntry`
+(`recurringPlanId` set to the plan's id) **only if** no entry already
+exists for that exact `(date, recurringPlanId)` pair. That makes it
+idempotent and safe to call every time a week is viewed — past, current,
+or future — without ever creating duplicates.
+
+**`dayOfWeek` is 0 = Monday ... 6 = Sunday** (matching the week grid's
+Mon-Sun column order), which is *not* the same as JS's `Date.getDay()`
+(0 = Sunday). Getting this backwards silently shifts every materialized
+entry by a day (e.g. Monday 6 doesn't touch this — it just picks the wrong
+day) — the type in `types.ts` calls this out, but double-check it at every
+boundary (UI weekday pickers included).
+
+The idempotency check and the date resolution are both pure logic, shared
+by both API implementations in `src/lib/data/recurring.ts`
+(`planMaterialization`) — don't reimplement either independently.
+
+`Weekly Tracker` calls `ensureWeekMaterialized(weekStart)` when a week's
+view loads (before/alongside reading that week's entries), then offers a
+"Repeat weekly" checkbox on a logged entry (→ `createRecurringPlan`) and a
+"stop repeating" action (→ `deactivateRecurringPlan`).
 
 Use it via `getApi()`:
 
@@ -96,7 +143,8 @@ Both are built on the same pure aggregation logic in `src/lib/data/summaries.ts`
 
 Date helpers live in `src/lib/data/dateUtils.ts`:
 `formatDateISO(date)`, `getCurrentWeekRange(reference?)` (Mon-Sun),
-`getCurrentMonthRange(reference?)`.
+`getCurrentMonthRange(reference?)`, `getDateForWeekday(weekStart, dayOfWeek)`
+(resolves a `RecurringPlan.dayOfWeek` to an actual date within that week).
 
 ## Theme (`src/theme/tokens.ts` + `tailwind.config.js`)
 
@@ -173,10 +221,11 @@ contract.
 ## Electron / persistence
 
 - `electron/db/index.ts` — opens (and migrates) a single SQLite database
-  file under `app.getPath('userData')`, table `workout_log_entries`
-  (`sets` stored as a JSON text column). Loads `better-sqlite3` via a
-  runtime `require` (not a static import) so the bundler never tries to
-  inline the native binary.
+  file under `app.getPath('userData')`. Tables: `workout_log_entries`
+  (`sets` stored as a JSON text column, plus a nullable `recurring_plan_id`
+  column) and `recurring_plans` (`day_of_week`, `sets` as JSON, `is_active`
+  as 0/1). Loads `better-sqlite3` via a runtime `require` (not a static
+  import) so the bundler never tries to inline the native binary.
 - `electron/ipc/persistence.ts` — registers one `ipcMain.handle` per
   `WorkoutTrackerApi` method (channel names `trackerApi:*`).
 - `electron/preload.ts` — bridges those channels to the renderer as

@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { WorkoutLogEntry } from './types';
+import type { RecurringPlan, WorkoutLogEntry } from './types';
 import type { WorkoutTrackerApi } from './api';
 import { formatDateISO, getCurrentMonthRange, getCurrentWeekRange } from './dateUtils';
 import { computeMonthSummary, computeWeekSummary } from './summaries';
+import { planMaterialization } from './recurring';
 import { exercisesSeedProposal } from '../../features/exercise-library/data/exercisesSeedProposal';
 
 // In-memory implementation of WorkoutTrackerApi. Lets Agents 2-4 build and
@@ -61,6 +62,7 @@ function seedLogEntries(): WorkoutLogEntry[] {
 }
 
 let logEntries: WorkoutLogEntry[] = seedLogEntries();
+let recurringPlans: RecurringPlan[] = [];
 
 function bodyPartOf(exerciseId: string) {
   return seedExercises.find((e) => e.id === exerciseId)?.bodyPart;
@@ -117,5 +119,47 @@ export const mockApi: WorkoutTrackerApi = {
     const { start, end } = getCurrentMonthRange(reference);
     const entries = logEntries.filter((e) => e.date >= start && e.date <= end);
     return computeMonthSummary(month, start, end, entries, bodyPartOf);
+  },
+
+  async listRecurringPlans() {
+    return recurringPlans;
+  },
+
+  async createRecurringPlan(input) {
+    const created: RecurringPlan = {
+      ...input,
+      id: uuidv4(),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    recurringPlans.push(created);
+    return created;
+  },
+
+  async deactivateRecurringPlan(id) {
+    const idx = recurringPlans.findIndex((p) => p.id === id);
+    if (idx === -1) return;
+    recurringPlans[idx] = { ...recurringPlans[idx], isActive: false };
+  },
+
+  async ensureWeekMaterialized(weekStart) {
+    const { end } = getCurrentWeekRange(new Date(`${weekStart}T00:00:00`));
+    const existingThisWeek = logEntries.filter((e) => e.date >= weekStart && e.date <= end);
+    const activePlans = recurringPlans.filter((p) => p.isActive);
+    const candidates = planMaterialization(weekStart, activePlans, existingThisWeek);
+
+    const now = new Date().toISOString();
+    for (const candidate of candidates) {
+      logEntries.push({
+        id: uuidv4(),
+        date: candidate.date,
+        exerciseId: candidate.exerciseId,
+        sets: candidate.sets,
+        notes: candidate.notes,
+        recurringPlanId: candidate.recurringPlanId,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
   },
 };

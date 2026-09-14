@@ -1,4 +1,4 @@
-import type { Exercise, WorkoutLogEntry, WeekSummary, MonthSummary } from './types';
+import type { Exercise, WorkoutLogEntry, WeekSummary, MonthSummary, RecurringPlan } from './types';
 
 // OWNERSHIP: owned by Agent 1 (scaffold). See docs/CONTRACTS.md.
 //
@@ -22,6 +22,22 @@ export interface WorkoutTrackerApi {
   deleteLogEntry(id: string): Promise<void>;
   getWeekSummary(weekStartDate: string): Promise<WeekSummary>;
   getMonthSummary(month: string): Promise<MonthSummary>;
+
+  // "Repeat weekly" — see RecurringPlan in types.ts for the dayOfWeek convention.
+  listRecurringPlans(): Promise<RecurringPlan[]>;
+  createRecurringPlan(
+    input: Omit<RecurringPlan, 'id' | 'createdAt' | 'isActive'>,
+  ): Promise<RecurringPlan>;
+  /** Sets isActive false. Does not touch any already-created WorkoutLogEntry rows. */
+  deactivateRecurringPlan(id: string): Promise<void>;
+  /**
+   * For every active RecurringPlan, computes that week's date for its
+   * dayOfWeek and creates a WorkoutLogEntry (linked via recurringPlanId) if
+   * one doesn't already exist for that (date, recurringPlanId) pair.
+   * Idempotent — safe to call every time a week is viewed (past, current,
+   * or future) without creating duplicates.
+   */
+  ensureWeekMaterialized(weekStart: string): Promise<void>;
 }
 
 // Read via globalThis (not `window`) so this file type-checks under both
