@@ -1,7 +1,7 @@
 // OWNED BY Agent 3 (Weekly Tracker). See docs/CONTRACTS.md.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addDays, format, getDay, parseISO } from 'date-fns';
+import { addDays, endOfMonth, format, getDay, parseISO } from 'date-fns';
 import { getApi } from '../data/api';
 import { getCurrentWeekRange } from '../data/dateUtils';
 import type { Exercise, SetEntry, WeekSummary, WorkoutLogEntry } from '../data/types';
@@ -46,7 +46,7 @@ export interface UseWeekResult {
   goToNextWeek: () => void;
   goToCurrentWeek: () => void;
   isCurrentWeek: boolean;
-  /** False once the viewed week reaches the current week — no browsing into the future. */
+  /** False once the next week would start after the end of the current calendar month. */
   canGoToNextWeek: boolean;
 }
 
@@ -239,6 +239,9 @@ export function useWeek(initialReference: Date = new Date()): UseWeekResult {
     goToNextWeek,
     goToCurrentWeek,
     isCurrentWeek: weekStart === currentWeekStart,
-    canGoToNextWeek: weekStart < currentWeekStart,
+    // Forward browsing is allowed through the end of the current calendar
+    // month (not just up to the current week) — recurring items materialize
+    // correctly for those future weeks too, via ensureWeekMaterialized.
+    canGoToNextWeek: addDays(parseISO(weekStart), 7) <= endOfMonth(new Date()),
   };
 }
