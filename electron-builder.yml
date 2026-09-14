@@ -1,0 +1,42 @@
+appId: com.trainingtracker.app
+productName: Training Tracker
+copyright: Copyright © Training Tracker
+
+directories:
+  output: release
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+
+# better-sqlite3 ships a native .node binary that cannot be loaded from
+# inside an asar archive — keep it (and its dependency tree) unpacked.
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**/*"
+
+# better-sqlite3 ships prebuilt N-API (ABI-stable) binaries for win32-x64
+# directly in the package (node_modules/better-sqlite3/prebuilds/), so no
+# per-runtime native rebuild is needed — and none is attempted here, since
+# that requires a full MSVC/node-gyp toolchain most dev machines won't have.
+# If a future dependency needs a real rebuild, set this to true and ensure
+# Visual Studio Build Tools (Desktop C++ workload) are installed first.
+npmRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+portable:
+  artifactName: '${productName}-${version}-portable.${ext}'
