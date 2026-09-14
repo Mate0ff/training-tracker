@@ -49,6 +49,8 @@ src/
     monthly-summary/  Monthly charts/summary
   routes.tsx          The 3 app routes + sidebar nav items
 docs/CONTRACTS.md      Shared data contracts + folder-ownership rules
+build-resources/       App icon (icon.ico, icon.png) used for the packaged
+                        installer/exe and the window icon
 ```
 
 See `docs/CONTRACTS.md` for the full data contracts, theme tokens, and
@@ -61,6 +63,15 @@ data folder (`app.getPath('userData')/training-tracker.db`) — nothing is
 sent anywhere. The exercise catalog is a static seed list bundled with the
 app (`src/lib/data/mockApi.ts`), not user-editable data, so it isn't
 stored in SQLite.
+
+## Data & licensing
+
+The exercise catalog (names, instructions, equipment) was written from
+scratch for this app — no exercise photos ship with it, and every exercise
+links out to a YouTube search instead of a hardcoded video, to avoid
+redistributing anyone else's media. See
+`src/features/exercise-library/assets/LICENSE_NOTES.md` for the full
+reasoning and what to check before adding real photos/illustrations later.
 
 ## Packaging
 

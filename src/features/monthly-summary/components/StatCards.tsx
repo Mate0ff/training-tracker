@@ -16,20 +16,20 @@ export function StatCards({ summary }: StatCardsProps) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       <StatTile
-        label="Workouts"
+        label="Workout Days"
         value={numberFormat.format(summary.totalWorkouts)}
         icon={<Dumbbell size={20} />}
         accentColor={colors.accent}
       />
       <StatTile
-        label="Sets"
+        label="Total Sets"
         value={numberFormat.format(summary.totalSets)}
         icon={<ListChecks size={20} />}
         accentColor={colors.muted.blue}
       />
       <StatTile
-        label="Volume (kg)"
-        value={numberFormat.format(Math.round(summary.totalVolume))}
+        label="Total Volume"
+        value={`${numberFormat.format(summary.totalVolume)} kg`}
         icon={<TrendingUp size={20} />}
         accentColor={colors.muted.teal}
       />

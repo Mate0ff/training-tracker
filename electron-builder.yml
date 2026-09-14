@@ -4,11 +4,13 @@ copyright: Copyright © Training Tracker
 
 directories:
   output: release
+  buildResources: build-resources
 
 files:
   - dist/**/*
   - dist-electron/**/*
   - package.json
+  - build-resources/icon.png
 
 # better-sqlite3 ships a native .node binary that cannot be loaded from
 # inside an asar archive — keep it (and its dependency tree) unpacked.
@@ -24,6 +26,7 @@ asarUnpack:
 npmRebuild: false
 
 win:
+  icon: build-resources/icon.ico
   target:
     - target: nsis
       arch: [x64]

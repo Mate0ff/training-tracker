@@ -12,6 +12,7 @@ process.env.APP_ROOT = path.join(__dirname, '..');
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron');
 const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist');
+const ICON_PATH = path.join(process.env.APP_ROOT, 'build-resources/icon.png');
 
 let win: BrowserWindow | null = null;
 
@@ -23,6 +24,7 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: '#0F1115', // matches theme bg — avoids a white flash on load
     autoHideMenuBar: true,
+    icon: ICON_PATH,
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs'),
       contextIsolation: true,

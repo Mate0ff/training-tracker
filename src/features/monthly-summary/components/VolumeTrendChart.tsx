@@ -47,7 +47,11 @@ export function VolumeTrendChart({ data }: VolumeTrendChartProps) {
       {hasVolume ? (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <BarChart
+              data={data}
+              margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+              barCategoryGap={2}
+            >
               <CartesianGrid vertical={false} stroke={colors.border} />
               <XAxis
                 dataKey="date"
@@ -67,7 +71,7 @@ export function VolumeTrendChart({ data }: VolumeTrendChartProps) {
                 content={(props) => <ChartTooltip {...props} />}
                 cursor={{ fill: colors.surfaceHover }}
               />
-              <Bar dataKey="volume" fill={colors.accent} radius={[3, 3, 0, 0]} maxBarSize={18} />
+              <Bar dataKey="volume" fill={colors.accent} radius={[2, 2, 0, 0]} barSize={10} />
             </BarChart>
           </ResponsiveContainer>
         </div>
