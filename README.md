@@ -1,17 +1,36 @@
 # Training Tracker
 
-A free, local desktop workout-tracking app. Electron + React + TypeScript,
-Vite, Tailwind CSS, better-sqlite3 — no backend, no server, no account.
+A free, local desktop workout-tracking app for planning and logging your
+training week — no account, no subscription, no server. Everything you log
+stays on your own machine.
 
-## Stack
+## What is this
 
-- Electron (desktop shell) + React 19 + TypeScript
-- Vite 8 (`vite-plugin-electron` for the main/preload build + dev reload)
-- Tailwind CSS (`darkMode: 'class'`, the app is always-dark)
-- better-sqlite3 (local persistence) + recharts (charts) + date-fns + uuid
-- electron-builder (Windows packaging: NSIS installer + portable exe)
+Training Tracker is an Electron desktop app for people who want a simple,
+no-frills way to plan and log their workouts without a subscription, an
+account, or their data leaving their computer. It has three screens:
+
+- **Week** — the current week (Mon–Sun) as the home screen. Add exercises to
+  any day, log sets/reps/weight, and see running totals for workout days,
+  sets, and volume across the week. An exercise can be marked **"Repeat
+  weekly"**, so it automatically shows up on the same weekday every week
+  going forward.
+- **Exercise Library** — roughly 90 common exercises, grouped by body part
+  (Chest, Back, Shoulders, Legs, Arms, Core, Cardio, Full Body), each with
+  step-by-step instructions and a link to a YouTube search for it. The same
+  browse-by-body-part picker is used when adding an exercise to a day.
+- **Monthly Summary** — aggregated stats for the current month: total
+  workouts, sets, volume, a volume trend chart, and a breakdown of which
+  body parts you've trained most.
 
 ## Getting started
+
+**Just want to use the app?** Build the installer yourself (see
+[Packaging](#packaging) below) and run it — it installs normally and adds a
+desktop shortcut. All your data lives in a local SQLite file under your
+user profile; nothing is sent anywhere.
+
+**Running from source:**
 
 ```bash
 npm install
@@ -21,6 +40,31 @@ npm run dev
 `npm run dev` starts the Vite dev server and opens an Electron window
 pointed at it, with hot reload for the renderer and auto-restart for the
 main process.
+
+**Building your own installer:**
+
+```bash
+npm run package
+```
+
+Produces an NSIS installer and a portable `.exe` in `release/` (see
+[Packaging](#packaging) below).
+
+## Screenshots
+
+**Week** — the home screen: add exercises per day, log sets/reps/weight,
+track totals for the week.
+
+![Week view](docs/screenshots/week.png)
+
+**Exercise Library** — browse ~90 exercises grouped by body part.
+
+![Exercise Library](docs/screenshots/library.png)
+
+**Monthly Summary** — totals, volume trend, and body-part breakdown for the
+current month.
+
+![Monthly Summary](docs/screenshots/monthly.png)
 
 ## Scripts
 
@@ -49,6 +93,7 @@ src/
     monthly-summary/  Monthly charts/summary
   routes.tsx          The 3 app routes + sidebar nav items
 docs/CONTRACTS.md      Shared data contracts + folder-ownership rules
+docs/screenshots/       Images used in this README
 build-resources/       App icon (icon.ico, icon.png) used for the packaged
                         installer/exe and the window icon
 ```
@@ -61,8 +106,8 @@ folder-ownership rules if you're working on one of the feature areas.
 All workout data lives in a single SQLite file under the OS's per-user app
 data folder (`app.getPath('userData')/training-tracker.db`) — nothing is
 sent anywhere. The exercise catalog is a static seed list bundled with the
-app (`src/lib/data/mockApi.ts`), not user-editable data, so it isn't
-stored in SQLite.
+app (`src/lib/data/mockApi.ts`), not user-editable data, so it isn't stored
+in SQLite.
 
 ## Data & licensing
 
@@ -82,3 +127,11 @@ npm run package
 Produces an NSIS installer and a portable `.exe` in `release/`. No code
 signing is configured (unsigned builds — Windows SmartScreen may warn on
 first run).
+
+## Tech stack
+
+- Electron (desktop shell) + React 19 + TypeScript
+- Vite 8 (`vite-plugin-electron` for the main/preload build + dev reload)
+- Tailwind CSS (`darkMode: 'class'`, the app is always-dark)
+- better-sqlite3 (local persistence) + recharts (charts) + date-fns + uuid
+- electron-builder (Windows packaging: NSIS installer + portable exe)
