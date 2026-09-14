@@ -25,6 +25,25 @@ export default defineConfig({
         vite: {
           build: {
             outDir: 'dist-electron',
+            rollupOptions: {
+              output: {
+                // Force CommonJS with a .cjs extension (package.json has
+                // "type": "module", so a plain .js output here would be
+                // ESM). CJS is required, not just preferred: Electron's
+                // preload loader failed with "Unable to load preload
+                // script" / "require is not defined in ES module scope"
+                // when this was an .mjs build — the ESM loader can't read
+                // through the asar virtual filesystem the way Electron's
+                // patched CJS `require` can, so contextBridge silently
+                // never ran and window.trackerApi stayed undefined in
+                // every packaged build (fine in dev, where there's no
+                // asar). See electron-builder.yml's asarUnpack comment —
+                // that alone didn't fix it, since the runtime path Electron
+                // resolves still points inside the asar either way.
+                format: 'cjs',
+                entryFileNames: 'preload.cjs',
+              },
+            },
           },
         },
       },
