@@ -18,8 +18,15 @@ export interface DayColumnProps {
     sets: SetEntry[];
     notes?: string;
   }) => Promise<unknown>;
+  onCreateRecurring: (input: {
+    date: string;
+    exerciseId: string;
+    sets: SetEntry[];
+    notes?: string;
+  }) => Promise<unknown>;
   onUpdate: (id: string, patch: { sets?: SetEntry[]; notes?: string }) => Promise<unknown>;
   onDelete: (id: string) => Promise<void>;
+  onStopRepeating: (recurringPlanId: string) => Promise<void>;
 }
 
 /** One day of the week: header, its logged exercises, and an "add exercise" action. */
@@ -29,8 +36,10 @@ export function DayColumn({
   entries,
   exercisesById,
   onCreate,
+  onCreateRecurring,
   onUpdate,
   onDelete,
+  onStopRepeating,
 }: DayColumnProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const dayDate = parseISO(date);
@@ -66,6 +75,7 @@ export function DayColumn({
               exercise={exercisesById.get(entry.exerciseId)}
               onUpdate={onUpdate}
               onDelete={onDelete}
+              onStopRepeating={onStopRepeating}
             />
           ))
         )}
@@ -87,6 +97,7 @@ export function DayColumn({
         date={date}
         onClose={() => setIsAddOpen(false)}
         onCreate={onCreate}
+        onCreateRecurring={onCreateRecurring}
       />
     </Card>
   );

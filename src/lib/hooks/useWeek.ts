@@ -1,7 +1,7 @@
 // OWNED BY Agent 3 (Weekly Tracker). See docs/CONTRACTS.md.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addDays, format, parseISO } from 'date-fns';
+import { addDays, format, getDay, parseISO } from 'date-fns';
 import { getApi } from '../data/api';
 import { getCurrentWeekRange } from '../data/dateUtils';
 import type { Exercise, SetEntry, WeekSummary, WorkoutLogEntry } from '../data/types';
@@ -33,6 +33,15 @@ export interface UseWeekResult {
     patch: { sets?: SetEntry[]; notes?: string },
   ) => Promise<WorkoutLogEntry>;
   deleteEntry: (id: string) => Promise<void>;
+  /** Logs this exercise on `date` AND creates a RecurringPlan for it so it auto-appears every week going forward. */
+  createRecurringEntry: (input: {
+    date: string;
+    exerciseId: string;
+    sets: SetEntry[];
+    notes?: string;
+  }) => Promise<void>;
+  /** Stops a RecurringPlan from materializing future weeks; already-created entries (including this week's) are untouched. */
+  stopRepeating: (recurringPlanId: string) => Promise<void>;
   goToPreviousWeek: () => void;
   goToNextWeek: () => void;
   goToCurrentWeek: () => void;
@@ -98,6 +107,8 @@ export function useWeek(initialReference: Date = new Date()): UseWeekResult {
     (async () => {
       try {
         const api = await getApi();
+        // Idempotent — safe (and required) on every week view: current, prev, or next.
+        await api.ensureWeekMaterialized(weekStart);
         const [entriesResult, summaryResult] = await Promise.all([
           api.listLogEntriesForRange(weekStart, weekEnd),
           api.getWeekSummary(weekStart),
@@ -123,6 +134,7 @@ export function useWeek(initialReference: Date = new Date()): UseWeekResult {
     setError(undefined);
     try {
       const api = await getApi();
+      await api.ensureWeekMaterialized(weekStart);
       const [entriesResult, summaryResult] = await Promise.all([
         api.listLogEntriesForRange(weekStart, weekEnd),
         api.getWeekSummary(weekStart),
@@ -158,6 +170,28 @@ export function useWeek(initialReference: Date = new Date()): UseWeekResult {
     async (id: string) => {
       const api = await getApi();
       await api.deleteLogEntry(id);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const createRecurringEntry = useCallback<UseWeekResult['createRecurringEntry']>(
+    async ({ date, exerciseId, sets, notes }) => {
+      const api = await getApi();
+      // RecurringPlan.dayOfWeek is 0=Monday..6=Sunday — NOT JS Date.getDay()'s 0=Sunday.
+      const dayOfWeek = (getDay(parseISO(date)) + 6) % 7;
+      await api.createRecurringPlan({ exerciseId, dayOfWeek, sets, notes });
+      // Materializes this week's instance (today's date resolves to the same
+      // dayOfWeek we just computed), so we don't also call createLogEntry.
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const stopRepeating = useCallback(
+    async (recurringPlanId: string) => {
+      const api = await getApi();
+      await api.deactivateRecurringPlan(recurringPlanId);
       await refresh();
     },
     [refresh],
@@ -199,6 +233,8 @@ export function useWeek(initialReference: Date = new Date()): UseWeekResult {
     createEntry,
     updateEntry,
     deleteEntry,
+    createRecurringEntry,
+    stopRepeating,
     goToPreviousWeek,
     goToNextWeek,
     goToCurrentWeek,

@@ -15,13 +15,25 @@ export interface AddExerciseModalProps {
     sets: SetEntry[];
     notes?: string;
   }) => Promise<unknown>;
+  onCreateRecurring: (input: {
+    date: string;
+    exerciseId: string;
+    sets: SetEntry[];
+    notes?: string;
+  }) => Promise<unknown>;
 }
 
 /**
  * Two-step "+" flow for a day: pick an exercise (ExercisePicker, owned by
  * Agent 2), then enter its sets (SetsRepsWeightForm) and save.
  */
-export function AddExerciseModal({ isOpen, date, onClose, onCreate }: AddExerciseModalProps) {
+export function AddExerciseModal({
+  isOpen,
+  date,
+  onClose,
+  onCreate,
+  onCreateRecurring,
+}: AddExerciseModalProps) {
   const [selectedExercise, setSelectedExercise] = useState<Exercise>();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -30,11 +42,21 @@ export function AddExerciseModal({ isOpen, date, onClose, onCreate }: AddExercis
     onClose();
   };
 
-  const handleSubmit = async (sets: SetEntry[], notes: string | undefined) => {
+  const handleSubmit = async (
+    sets: SetEntry[],
+    notes: string | undefined,
+    repeatWeekly: boolean,
+  ) => {
     if (!selectedExercise) return;
     setIsSaving(true);
     try {
-      await onCreate({ date, exerciseId: selectedExercise.id, sets, notes });
+      // Repeat weekly materializes this day's instance itself (via
+      // ensureWeekMaterialized) — don't also call onCreate, or it'd double up.
+      if (repeatWeekly) {
+        await onCreateRecurring({ date, exerciseId: selectedExercise.id, sets, notes });
+      } else {
+        await onCreate({ date, exerciseId: selectedExercise.id, sets, notes });
+      }
       handleClose();
     } finally {
       setIsSaving(false);
@@ -48,6 +70,7 @@ export function AddExerciseModal({ isOpen, date, onClose, onCreate }: AddExercis
           exerciseName={selectedExercise.name}
           submitLabel="Add to day"
           isSubmitting={isSaving}
+          showRepeatOption
           onSubmit={handleSubmit}
           onCancel={() => setSelectedExercise(undefined)}
         />

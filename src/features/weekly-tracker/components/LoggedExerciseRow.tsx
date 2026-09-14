@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Repeat, Trash2 } from 'lucide-react';
 import { Button, Modal } from '../../../components';
 import { bodyPartColors } from '../../../theme/tokens';
 import type { Exercise, SetEntry, WorkoutLogEntry } from '../../../lib/data/types';
@@ -10,6 +10,8 @@ export interface LoggedExerciseRowProps {
   exercise: Exercise | undefined;
   onUpdate: (id: string, patch: { sets?: SetEntry[]; notes?: string }) => Promise<unknown>;
   onDelete: (id: string) => Promise<void>;
+  /** Deactivates the RecurringPlan behind this entry — future weeks stop; this and past entries are untouched. */
+  onStopRepeating: (recurringPlanId: string) => Promise<void>;
 }
 
 type RowView = 'detail' | 'edit' | 'delete';
@@ -19,10 +21,18 @@ type RowView = 'detail' | 'edit' | 'delete';
  * opens a modal with the set/rep/weight detail, plus edit and delete
  * actions — keeps the day card itself to just exercise names.
  */
-export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: LoggedExerciseRowProps) {
+export function LoggedExerciseRow({
+  entry,
+  exercise,
+  onUpdate,
+  onDelete,
+  onStopRepeating,
+}: LoggedExerciseRowProps) {
   const [view, setView] = useState<RowView>();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isStoppingRepeat, setIsStoppingRepeat] = useState(false);
+  const [hasStoppedRepeat, setHasStoppedRepeat] = useState(false);
 
   const exerciseName = exercise?.name ?? 'Unknown exercise';
   const close = () => setView(undefined);
@@ -47,6 +57,17 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
     }
   };
 
+  const handleStopRepeating = async () => {
+    if (!entry.recurringPlanId) return;
+    setIsStoppingRepeat(true);
+    try {
+      await onStopRepeating(entry.recurringPlanId);
+      setHasStoppedRepeat(true);
+    } finally {
+      setIsStoppingRepeat(false);
+    }
+  };
+
   return (
     <>
       <button
@@ -62,7 +83,12 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
             aria-hidden="true"
           />
         )}
-        <span className="line-clamp-2 text-sm font-medium text-text-primary">{exerciseName}</span>
+        <span className="line-clamp-2 flex-1 text-sm font-medium text-text-primary">
+          {exerciseName}
+        </span>
+        {entry.recurringPlanId && (
+          <Repeat size={12} className="mt-1 shrink-0 text-text-tertiary" aria-label="Repeats weekly" />
+        )}
       </button>
 
       <Modal
@@ -83,6 +109,27 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
         }
       >
         <div className="flex flex-col gap-3">
+          {entry.recurringPlanId && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface-hover px-3 py-2 text-xs text-text-secondary">
+              <span className="flex items-center gap-1.5">
+                <Repeat size={13} className="shrink-0 text-text-tertiary" />
+                {hasStoppedRepeat
+                  ? "Stopped — won't be added automatically anymore."
+                  : 'Repeats weekly. Stopping only affects future weeks — this and past entries stay.'}
+              </span>
+              {!hasStoppedRepeat && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleStopRepeating}
+                  disabled={isStoppingRepeat}
+                >
+                  {isStoppingRepeat ? 'Stopping…' : 'Stop repeating'}
+                </Button>
+              )}
+            </div>
+          )}
           <ul className="flex flex-col gap-1.5">
             {entry.sets.map((s) => (
               <li key={s.setNumber} className="flex items-center justify-between text-sm">

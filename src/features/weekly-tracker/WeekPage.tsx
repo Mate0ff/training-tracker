@@ -18,6 +18,8 @@ export function WeekPage() {
     createEntry,
     updateEntry,
     deleteEntry,
+    createRecurringEntry,
+    stopRepeating,
     goToPreviousWeek,
     goToNextWeek,
     goToCurrentWeek,
@@ -70,8 +72,10 @@ export function WeekPage() {
             entriesByDate={entriesByDate}
             exercisesById={exercisesById}
             onCreate={createEntry}
+            onCreateRecurring={createRecurringEntry}
             onUpdate={updateEntry}
             onDelete={deleteEntry}
+            onStopRepeating={stopRepeating}
           />
         </>
       )}

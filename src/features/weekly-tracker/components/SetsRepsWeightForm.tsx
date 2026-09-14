@@ -10,7 +10,13 @@ export interface SetsRepsWeightFormProps {
   initialNotes?: string;
   submitLabel?: string;
   isSubmitting?: boolean;
-  onSubmit: (sets: SetEntry[], notes: string | undefined) => void | Promise<void>;
+  /** Show the "Repeat weekly" checkbox (only meaningful when logging a brand-new entry). */
+  showRepeatOption?: boolean;
+  onSubmit: (
+    sets: SetEntry[],
+    notes: string | undefined,
+    repeatWeekly: boolean,
+  ) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -37,11 +43,13 @@ export function SetsRepsWeightForm({
   initialNotes,
   submitLabel = 'Save',
   isSubmitting = false,
+  showRepeatOption = false,
   onSubmit,
   onCancel,
 }: SetsRepsWeightFormProps) {
   const [draftSets, setDraftSets] = useState<DraftSet[]>(() => toDraftSets(initialSets));
   const [notes, setNotes] = useState(initialNotes ?? '');
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
   const [formError, setFormError] = useState<string>();
 
   const updateSet = (index: number, patch: Partial<DraftSet>) => {
@@ -77,7 +85,7 @@ export function SetsRepsWeightForm({
       return;
     }
 
-    void onSubmit(sets, notes.trim() === '' ? undefined : notes.trim());
+    void onSubmit(sets, notes.trim() === '' ? undefined : notes.trim(), repeatWeekly);
   };
 
   return (
@@ -133,6 +141,23 @@ export function SetsRepsWeightForm({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
       />
+
+      {showRepeatOption && (
+        <label className="flex cursor-pointer items-start gap-2 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={repeatWeekly}
+            onChange={(e) => setRepeatWeekly(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-bg accent-accent focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <span>
+            Repeat weekly
+            <span className="block text-xs text-text-tertiary">
+              Automatically logs this exercise on this day every week.
+            </span>
+          </span>
+        </label>
+      )}
 
       {formError && <p className="text-xs text-muted-danger">{formError}</p>}
 

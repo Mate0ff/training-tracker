@@ -14,8 +14,15 @@ export interface WeekGridProps {
     sets: SetEntry[];
     notes?: string;
   }) => Promise<unknown>;
+  onCreateRecurring: (input: {
+    date: string;
+    exerciseId: string;
+    sets: SetEntry[];
+    notes?: string;
+  }) => Promise<unknown>;
   onUpdate: (id: string, patch: { sets?: SetEntry[]; notes?: string }) => Promise<unknown>;
   onDelete: (id: string) => Promise<void>;
+  onStopRepeating: (recurringPlanId: string) => Promise<void>;
 }
 
 /** Mon-Sun grid of DayColumns — stacks to one column on narrow screens. */
@@ -24,8 +31,10 @@ export function WeekGrid({
   entriesByDate,
   exercisesById,
   onCreate,
+  onCreateRecurring,
   onUpdate,
   onDelete,
+  onStopRepeating,
 }: WeekGridProps) {
   const today = formatDateISO(new Date());
   const startDate = parseISO(weekStart);
@@ -41,8 +50,10 @@ export function WeekGrid({
           entries={entriesByDate.get(date) ?? []}
           exercisesById={exercisesById}
           onCreate={onCreate}
+          onCreateRecurring={onCreateRecurring}
           onUpdate={onUpdate}
           onDelete={onDelete}
+          onStopRepeating={onStopRepeating}
         />
       ))}
     </div>
