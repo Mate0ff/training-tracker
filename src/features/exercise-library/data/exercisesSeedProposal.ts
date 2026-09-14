@@ -1,16 +1,20 @@
 import type { Exercise } from '../../../lib/data/types';
 
-// This is the live 40-exercise catalog: `seedExercises` in
+// This is the live exercise catalog: `seedExercises` in
 // `src/lib/data/mockApi.ts` (owned by Agent 1 — also imported from there by
 // `electron/ipc/persistence.ts` for the real, better-sqlite3-backed
 // implementation) re-exports this array directly, so editing it here is
 // what changes the catalog everywhere.
 //
-// The first 8 entries below are byte-for-byte the exercises originally
-// seeded in `mockApi.ts` (same ids, unchanged), since `seedLogEntries()` in
-// that file references their ids. The remaining ~32 were added by Agent 2
-// (Exercise Library), bringing the catalog to 5 exercises per body part
-// across all 8 `BodyPart` values. All instruction text was written from
+// 8 of the entries below are byte-for-byte the exercises originally seeded
+// in `mockApi.ts` (same ids, unchanged, still in their original relative
+// position within their body-part section), since `seedLogEntries()` in
+// that file references their ids. The rest were added by Agent 2 (Exercise
+// Library) — first a pass to 5 exercises per body part, then a second pass
+// (per user feedback asking for more variety) to ~11 per body part across
+// all 8 `BodyPart` values, covering equipment variations (barbell/dumbbell/
+// cable/machine/bodyweight/band) and less-common-but-popular movements
+// rather than near-duplicates. All instruction text was written from
 // scratch for this app (see `../assets/LICENSE_NOTES.md`).
 //
 // This feature's own components (LibraryPage, ExercisePicker) don't import
@@ -89,6 +93,83 @@ export const exercisesSeedProposal: Exercise[] = [
     ],
     youtubeSearchUrl: youtubeSearchUrl('Chest Dip'),
   },
+  {
+    id: 'ex-flat-dumbbell-press',
+    name: 'Flat Dumbbell Press',
+    bodyPart: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'Dumbbells',
+    instructions: [
+      'Lie flat on a bench holding a dumbbell in each hand at chest height, palms facing forward.',
+      'Press both dumbbells straight up until your arms are extended.',
+      'Lower back down with control until you feel a stretch across your chest.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Flat Dumbbell Press'),
+  },
+  {
+    id: 'ex-decline-barbell-press',
+    name: 'Decline Barbell Bench Press',
+    bodyPart: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'Barbell, decline bench',
+    instructions: [
+      'Lie back on a decline bench with your feet secured and grip the bar slightly wider than shoulder-width.',
+      'Lower the bar to your lower chest.',
+      'Press back up to full extension.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Decline Barbell Bench Press'),
+  },
+  {
+    id: 'ex-machine-chest-press',
+    name: 'Machine Chest Press',
+    bodyPart: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'Chest press machine',
+    instructions: [
+      'Sit in the machine with the handles at chest height and your back flat against the pad.',
+      'Press the handles forward until your arms are extended, without locking your elbows.',
+      'Return to the starting position under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Machine Chest Press'),
+  },
+  {
+    id: 'ex-resistance-band-chest-press',
+    name: 'Resistance Band Chest Press',
+    bodyPart: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'Resistance band',
+    instructions: [
+      'Anchor a band behind you at chest height and hold one handle in each hand, stepping forward to add tension.',
+      'Press both hands forward until your arms are extended.',
+      'Return slowly to the starting position, keeping tension on the band.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Resistance Band Chest Press'),
+  },
+  {
+    id: 'ex-pec-deck-fly',
+    name: 'Pec Deck Fly',
+    bodyPart: 'chest',
+    equipment: 'Pec deck machine',
+    instructions: [
+      'Sit in the machine with your back flat and forearms against the pads.',
+      'Bring your arms together in front of your chest in a hugging motion.',
+      'Return slowly to the starting position, feeling a stretch across the chest.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Pec Deck Fly'),
+  },
+  {
+    id: 'ex-svend-press',
+    name: 'Svend Press',
+    bodyPart: 'chest',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'Weight plate',
+    instructions: [
+      'Stand holding a weight plate between both palms at chest height, pressing the plate faces together.',
+      'Extend your arms straight out in front of you while maintaining pressure on the plate.',
+      'Pull the plate back to your chest with control and repeat.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Svend Press'),
+  },
 
   // ── Back ─────────────────────────────────────────────────────────────
   {
@@ -156,6 +237,84 @@ export const exercisesSeedProposal: Exercise[] = [
     ],
     youtubeSearchUrl: youtubeSearchUrl('Deadlift'),
   },
+  {
+    id: 'ex-single-arm-dumbbell-row',
+    name: 'Single-Arm Dumbbell Row',
+    bodyPart: 'back',
+    secondaryMuscles: ['biceps', 'shoulders'],
+    equipment: 'Dumbbell, bench',
+    instructions: [
+      'Place one knee and hand on a bench for support, holding a dumbbell in the opposite hand with your arm extended.',
+      'Pull the dumbbell up toward your hip, keeping your elbow close to your body.',
+      'Lower back down with control and repeat, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Single-Arm Dumbbell Row'),
+  },
+  {
+    id: 'ex-t-bar-row',
+    name: 'T-Bar Row',
+    bodyPart: 'back',
+    secondaryMuscles: ['biceps', 'shoulders'],
+    equipment: 'T-bar row machine or landmine attachment',
+    instructions: [
+      'Straddle the bar and hinge forward at the hips, gripping the handles with a neutral grip.',
+      'Pull the weight up toward your chest, squeezing your shoulder blades together.',
+      'Lower back down under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('T-Bar Row'),
+  },
+  {
+    id: 'ex-chin-up',
+    name: 'Chin-Up',
+    bodyPart: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'Pull-up bar',
+    instructions: [
+      'Hang from the bar with an underhand grip, hands about shoulder-width apart.',
+      'Pull yourself up until your chin clears the bar.',
+      'Lower under control to a full hang.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Chin-Up'),
+  },
+  {
+    id: 'ex-straight-arm-pulldown',
+    name: 'Straight-Arm Pulldown',
+    bodyPart: 'back',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'Cable machine',
+    instructions: [
+      'Stand facing a high cable pulley with a straight or rope attachment, arms extended in front of you.',
+      'Keeping your arms straight, pull the attachment down toward your thighs.',
+      'Let it rise back up under control without bending your elbows.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Straight-Arm Pulldown'),
+  },
+  {
+    id: 'ex-resistance-band-row',
+    name: 'Resistance Band Row',
+    bodyPart: 'back',
+    secondaryMuscles: ['biceps', 'shoulders'],
+    equipment: 'Resistance band',
+    instructions: [
+      'Anchor a band at chest height in front of you and hold a handle in each hand, stepping back to add tension.',
+      'Pull both handles toward your torso, squeezing your shoulder blades together.',
+      'Extend your arms back out under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Resistance Band Row'),
+  },
+  {
+    id: 'ex-good-morning',
+    name: 'Good Morning',
+    bodyPart: 'back',
+    secondaryMuscles: ['legs', 'core'],
+    equipment: 'Barbell',
+    instructions: [
+      'Rest a barbell across your upper back as in a squat, feet shoulder-width apart.',
+      'With a slight bend in the knees, hinge forward at the hips until your torso is close to parallel with the floor.',
+      'Drive your hips forward to return to standing.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Good Morning'),
+  },
 
   // ── Shoulders ────────────────────────────────────────────────────────
   {
@@ -220,6 +379,83 @@ export const exercisesSeedProposal: Exercise[] = [
       'Reverse the rotation as you lower back to the starting position.',
     ],
     youtubeSearchUrl: youtubeSearchUrl('Arnold Press'),
+  },
+  {
+    id: 'ex-dumbbell-shoulder-press',
+    name: 'Dumbbell Shoulder Press',
+    bodyPart: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'Dumbbells',
+    instructions: [
+      'Sit or stand holding a dumbbell in each hand at shoulder height, palms facing forward.',
+      'Press both dumbbells overhead until your arms are extended.',
+      'Lower back to shoulder height with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Dumbbell Shoulder Press'),
+  },
+  {
+    id: 'ex-machine-shoulder-press',
+    name: 'Machine Shoulder Press',
+    bodyPart: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'Shoulder press machine',
+    instructions: [
+      'Sit in the machine with the handles at shoulder height and your back against the pad.',
+      'Press the handles upward until your arms are extended.',
+      'Lower back down under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Machine Shoulder Press'),
+  },
+  {
+    id: 'ex-upright-row',
+    name: 'Upright Row',
+    bodyPart: 'shoulders',
+    secondaryMuscles: ['back'],
+    equipment: 'Barbell or dumbbells',
+    instructions: [
+      'Stand holding the weight in front of your thighs with an overhand, shoulder-width grip.',
+      'Pull the weight straight up along your body until your elbows reach shoulder height.',
+      'Lower back down with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Upright Row'),
+  },
+  {
+    id: 'ex-cable-lateral-raise',
+    name: 'Cable Lateral Raise',
+    bodyPart: 'shoulders',
+    equipment: 'Cable machine',
+    instructions: [
+      'Stand side-on to a low cable pulley, gripping the handle in the hand furthest from the machine.',
+      'Raise your arm out to the side until it reaches shoulder height.',
+      'Lower back down with control, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Cable Lateral Raise'),
+  },
+  {
+    id: 'ex-rear-delt-fly',
+    name: 'Rear Delt Fly',
+    bodyPart: 'shoulders',
+    secondaryMuscles: ['back'],
+    equipment: 'Dumbbells',
+    instructions: [
+      'Hinge forward at the hips holding a light dumbbell in each hand, arms hanging down with a slight bend.',
+      'Raise both arms out to the sides until they reach shoulder height, squeezing your shoulder blades together.',
+      'Lower back down with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Rear Delt Fly'),
+  },
+  {
+    id: 'ex-landmine-press',
+    name: 'Landmine Press',
+    bodyPart: 'shoulders',
+    secondaryMuscles: ['triceps', 'core'],
+    equipment: 'Barbell, landmine attachment',
+    instructions: [
+      'Anchor one end of a barbell in a landmine attachment and hold the other end at shoulder height with one hand.',
+      'Press the bar up and forward until your arm is extended.',
+      'Lower back to shoulder height with control, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Landmine Press'),
   },
 
   // ── Legs ─────────────────────────────────────────────────────────────
@@ -286,6 +522,82 @@ export const exercisesSeedProposal: Exercise[] = [
     ],
     youtubeSearchUrl: youtubeSearchUrl('Standing Calf Raise'),
   },
+  {
+    id: 'ex-front-squat',
+    name: 'Front Squat',
+    bodyPart: 'legs',
+    secondaryMuscles: ['core', 'back'],
+    equipment: 'Barbell',
+    instructions: [
+      'Rest the bar across the front of your shoulders, elbows raised high to cradle it.',
+      'Bend your knees and hips to lower until your thighs are parallel to the floor, keeping your torso upright.',
+      'Drive through your heels to stand back up.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Front Squat'),
+  },
+  {
+    id: 'ex-goblet-squat',
+    name: 'Goblet Squat',
+    bodyPart: 'legs',
+    secondaryMuscles: ['core'],
+    equipment: 'Dumbbell or kettlebell',
+    instructions: [
+      'Hold a dumbbell or kettlebell vertically against your chest with both hands.',
+      'Bend your knees and hips to squat down until your thighs are parallel to the floor.',
+      'Drive through your heels to stand back up.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Goblet Squat'),
+  },
+  {
+    id: 'ex-leg-extension',
+    name: 'Leg Extension',
+    bodyPart: 'legs',
+    equipment: 'Leg extension machine',
+    instructions: [
+      'Sit in the machine with the pad resting against your shins and knees bent at 90 degrees.',
+      'Extend your legs until they are straight, squeezing your quads at the top.',
+      'Lower back down under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Leg Extension'),
+  },
+  {
+    id: 'ex-leg-curl',
+    name: 'Lying Leg Curl',
+    bodyPart: 'legs',
+    equipment: 'Leg curl machine',
+    instructions: [
+      'Lie face down on the machine with the pad resting against the back of your ankles.',
+      'Curl your heels toward your glutes, squeezing your hamstrings.',
+      'Lower back down under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Lying Leg Curl'),
+  },
+  {
+    id: 'ex-bulgarian-split-squat',
+    name: 'Bulgarian Split Squat',
+    bodyPart: 'legs',
+    secondaryMuscles: ['core'],
+    equipment: 'Bodyweight or dumbbells, bench',
+    instructions: [
+      'Stand a couple of feet in front of a bench and rest the top of one foot on it behind you.',
+      'Lower your hips until your front thigh is roughly parallel to the floor.',
+      'Push through your front heel to return to standing, then switch legs.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Bulgarian Split Squat'),
+  },
+  {
+    id: 'ex-hip-thrust',
+    name: 'Barbell Hip Thrust',
+    bodyPart: 'legs',
+    secondaryMuscles: ['core'],
+    equipment: 'Barbell, bench',
+    instructions: [
+      'Sit on the floor with your upper back against a bench and a barbell across your hips.',
+      'Drive through your heels to raise your hips until your body forms a straight line from shoulders to knees.',
+      'Lower back down with control and repeat.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Barbell Hip Thrust'),
+  },
 
   // ── Arms ─────────────────────────────────────────────────────────────
   {
@@ -350,6 +662,78 @@ export const exercisesSeedProposal: Exercise[] = [
     ],
     youtubeSearchUrl: youtubeSearchUrl('Lying Tricep Extension Skull Crusher'),
   },
+  {
+    id: 'ex-dumbbell-curl',
+    name: 'Dumbbell Curl',
+    bodyPart: 'arms',
+    equipment: 'Dumbbells',
+    instructions: [
+      'Stand holding a dumbbell in each hand at your sides, palms facing forward.',
+      'Curl both dumbbells up toward your shoulders, keeping your elbows still.',
+      'Lower back down with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Dumbbell Curl'),
+  },
+  {
+    id: 'ex-preacher-curl',
+    name: 'Preacher Curl',
+    bodyPart: 'arms',
+    equipment: 'Barbell or EZ bar, preacher bench',
+    instructions: [
+      'Sit at a preacher bench with your upper arms resting on the pad and grip the bar with an underhand grip.',
+      'Curl the bar up toward your shoulders.',
+      'Lower back down with control until your arms are nearly straight.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Preacher Curl'),
+  },
+  {
+    id: 'ex-cable-curl',
+    name: 'Cable Curl',
+    bodyPart: 'arms',
+    equipment: 'Cable machine',
+    instructions: [
+      'Stand facing a low cable pulley with a straight bar attachment, gripping it with an underhand grip.',
+      'Curl the bar up toward your shoulders, keeping your elbows at your sides.',
+      'Lower back down under control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Cable Curl'),
+  },
+  {
+    id: 'ex-overhead-tricep-extension',
+    name: 'Overhead Tricep Extension',
+    bodyPart: 'arms',
+    equipment: 'Dumbbell',
+    instructions: [
+      'Stand or sit holding a dumbbell with both hands overhead, arms fully extended.',
+      'Lower the dumbbell behind your head by bending your elbows, keeping your upper arms still.',
+      'Extend your arms back to the starting position.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Overhead Tricep Extension'),
+  },
+  {
+    id: 'ex-band-curl',
+    name: 'Resistance Band Curl',
+    bodyPart: 'arms',
+    equipment: 'Resistance band',
+    instructions: [
+      'Stand on the middle of a resistance band, holding one handle in each hand at your sides.',
+      'Curl both hands up toward your shoulders, keeping your elbows still.',
+      'Lower back down with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Resistance Band Curl'),
+  },
+  {
+    id: 'ex-concentration-curl',
+    name: 'Concentration Curl',
+    bodyPart: 'arms',
+    equipment: 'Dumbbell',
+    instructions: [
+      'Sit on a bench and brace the back of your upper arm against the inside of your thigh, holding a dumbbell with an underhand grip.',
+      'Curl the dumbbell up toward your shoulder, keeping your upper arm still.',
+      'Lower back down with control, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Concentration Curl'),
+  },
 
   // ── Core ─────────────────────────────────────────────────────────────
   {
@@ -409,6 +793,80 @@ export const exercisesSeedProposal: Exercise[] = [
       'Continue alternating at a controlled or fast pace, keeping your hips level.',
     ],
     youtubeSearchUrl: youtubeSearchUrl('Mountain Climber'),
+  },
+  {
+    id: 'ex-bicycle-crunch',
+    name: 'Bicycle Crunch',
+    bodyPart: 'core',
+    equipment: 'Bodyweight',
+    instructions: [
+      'Lie on your back with hands lightly supporting your head and knees pulled toward your chest.',
+      'Rotate to bring one elbow toward the opposite knee while extending the other leg out.',
+      'Alternate sides in a smooth pedaling motion.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Bicycle Crunch'),
+  },
+  {
+    id: 'ex-cable-woodchopper',
+    name: 'Cable Woodchopper',
+    bodyPart: 'core',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'Cable machine',
+    instructions: [
+      'Set a cable pulley high and stand side-on, gripping the handle with both hands.',
+      'Pull the handle down and across your body toward your opposite hip, rotating your torso.',
+      'Return to the starting position under control, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Cable Woodchopper'),
+  },
+  {
+    id: 'ex-side-plank',
+    name: 'Side Plank',
+    bodyPart: 'core',
+    equipment: 'Bodyweight',
+    instructions: [
+      'Lie on your side and prop yourself up on one forearm, stacking your feet.',
+      'Raise your hips until your body forms a straight line from head to feet.',
+      'Hold, keeping your core braced, then switch sides.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Side Plank'),
+  },
+  {
+    id: 'ex-ab-wheel-rollout',
+    name: 'Ab Wheel Rollout',
+    bodyPart: 'core',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'Ab wheel',
+    instructions: [
+      'Kneel on the floor holding the ab wheel with both hands beneath your shoulders.',
+      'Roll the wheel forward, extending your body as far as you can while keeping your core braced.',
+      'Roll back to the starting position with control.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Ab Wheel Rollout'),
+  },
+  {
+    id: 'ex-flutter-kicks',
+    name: 'Flutter Kicks',
+    bodyPart: 'core',
+    equipment: 'Bodyweight',
+    instructions: [
+      'Lie on your back with your legs extended and hands tucked under your hips for support.',
+      'Lift both legs slightly off the floor and alternate small up-and-down kicks.',
+      'Keep your lower back pressed into the floor throughout.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Flutter Kicks'),
+  },
+  {
+    id: 'ex-dead-bug',
+    name: 'Dead Bug',
+    bodyPart: 'core',
+    equipment: 'Bodyweight',
+    instructions: [
+      'Lie on your back with arms extended toward the ceiling and knees bent at 90 degrees above your hips.',
+      'Slowly extend one arm overhead and the opposite leg straight out, keeping your lower back flat on the floor.',
+      'Return to the starting position and repeat on the other side.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Dead Bug'),
   },
 
   // ── Cardio ───────────────────────────────────────────────────────────
@@ -470,6 +928,84 @@ export const exercisesSeedProposal: Exercise[] = [
       'Maintain a steady rhythm for your target duration.',
     ],
     youtubeSearchUrl: youtubeSearchUrl('Stair Climber'),
+  },
+  {
+    id: 'ex-elliptical-trainer',
+    name: 'Elliptical Trainer',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['legs'],
+    equipment: 'Elliptical machine',
+    instructions: [
+      'Step onto the pedals and grip the moving handles.',
+      'Push and pull in a smooth, continuous motion at a steady pace.',
+      'Adjust resistance and incline as needed for your target intensity.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Elliptical Trainer'),
+  },
+  {
+    id: 'ex-outdoor-cycling',
+    name: 'Outdoor Cycling',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['legs'],
+    equipment: 'Bicycle',
+    instructions: [
+      'Warm up with a few minutes of easy pedaling.',
+      'Ride at a steady, sustainable pace for your target duration.',
+      'Cool down with easy pedaling before stopping.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Outdoor Cycling'),
+  },
+  {
+    id: 'ex-swimming',
+    name: 'Swimming (Freestyle)',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['back', 'shoulders', 'arms'],
+    equipment: 'Pool',
+    instructions: [
+      'Push off the wall into a streamlined position.',
+      'Alternate arm strokes while rotating your body and kicking continuously.',
+      'Breathe to the side every few strokes and maintain a steady pace.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Swimming Freestyle'),
+  },
+  {
+    id: 'ex-shadow-boxing',
+    name: 'Shadow Boxing',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['shoulders', 'core'],
+    equipment: 'Bodyweight',
+    instructions: [
+      'Stand in a boxing stance with hands guarding your face.',
+      'Throw a continuous combination of punches at an imaginary opponent, staying light on your feet.',
+      'Keep moving and punching for your target duration.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Shadow Boxing'),
+  },
+  {
+    id: 'ex-high-knees',
+    name: 'High Knees',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['legs', 'core'],
+    equipment: 'Bodyweight',
+    instructions: [
+      'Stand tall and run in place, driving your knees up toward your chest as high and fast as you can.',
+      'Pump your arms in rhythm with your legs.',
+      'Keep your torso upright throughout.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('High Knees'),
+  },
+  {
+    id: 'ex-sled-push',
+    name: 'Sled Push',
+    bodyPart: 'cardio',
+    secondaryMuscles: ['legs', 'core'],
+    equipment: 'Weighted sled',
+    instructions: [
+      'Load the sled and grip the handles with your arms extended, leaning your body forward.',
+      'Drive through your legs to push the sled forward in short, powerful steps.',
+      'Keep your back flat and core braced throughout.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Sled Push'),
   },
 
   // ── Full Body ────────────────────────────────────────────────────────
@@ -535,5 +1071,83 @@ export const exercisesSeedProposal: Exercise[] = [
       'Keep your knees soft and core braced throughout.',
     ],
     youtubeSearchUrl: youtubeSearchUrl('Battle Ropes'),
+  },
+  {
+    id: 'ex-farmers-carry',
+    name: "Farmer's Carry",
+    bodyPart: 'full_body',
+    secondaryMuscles: ['back', 'core', 'shoulders'],
+    equipment: 'Dumbbells or kettlebells',
+    instructions: [
+      'Pick up a heavy dumbbell or kettlebell in each hand and stand tall, shoulders back.',
+      'Walk forward for your target distance or time, keeping your core braced and steps controlled.',
+      'Set the weights down with control when finished.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl("Farmer's Carry"),
+  },
+  {
+    id: 'ex-man-maker',
+    name: 'Man Maker',
+    bodyPart: 'full_body',
+    secondaryMuscles: ['back', 'shoulders', 'core', 'legs'],
+    equipment: 'Dumbbells',
+    instructions: [
+      'Start in a plank holding a dumbbell in each hand, then row one dumbbell up to your ribs, then the other.',
+      'Perform a push-up, then jump your feet toward your hands to stand up.',
+      'Curl the dumbbells to your shoulders and press them overhead, then lower and repeat.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Man Maker'),
+  },
+  {
+    id: 'ex-turkish-get-up',
+    name: 'Turkish Get-Up',
+    bodyPart: 'full_body',
+    secondaryMuscles: ['core', 'shoulders', 'legs'],
+    equipment: 'Kettlebell or dumbbell',
+    instructions: [
+      'Lie on your back holding a kettlebell overhead in one hand, arm locked out, opposite knee bent.',
+      'Rise up through a sequence of a forearm, then hand, then a kneeling position, keeping the weight locked overhead throughout.',
+      'Stand all the way up, then reverse the sequence to return to the floor.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Turkish Get-Up'),
+  },
+  {
+    id: 'ex-wall-ball',
+    name: 'Wall Ball',
+    bodyPart: 'full_body',
+    secondaryMuscles: ['legs', 'shoulders', 'core'],
+    equipment: 'Medicine ball',
+    instructions: [
+      'Hold a medicine ball at chest height and stand facing a wall, feet shoulder-width apart.',
+      'Squat down, then drive up explosively and throw the ball against a target on the wall.',
+      'Catch the ball as it comes back down and immediately drop into the next squat.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Wall Ball'),
+  },
+  {
+    id: 'ex-bear-crawl',
+    name: 'Bear Crawl',
+    bodyPart: 'full_body',
+    secondaryMuscles: ['core', 'shoulders'],
+    equipment: 'Bodyweight',
+    instructions: [
+      'Start on your hands and feet with your knees hovering just off the floor.',
+      'Crawl forward by moving your opposite hand and foot together, keeping your hips low and core braced.',
+      'Continue for your target distance or time.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Bear Crawl'),
+  },
+  {
+    id: 'ex-medicine-ball-slam',
+    name: 'Medicine Ball Slam',
+    bodyPart: 'full_body',
+    secondaryMuscles: ['shoulders', 'core'],
+    equipment: 'Medicine ball',
+    instructions: [
+      'Stand holding a medicine ball overhead with both hands, feet shoulder-width apart.',
+      'Slam the ball down into the floor as hard as you can, hinging at the hips and bracing your core.',
+      'Pick the ball back up and repeat.',
+    ],
+    youtubeSearchUrl: youtubeSearchUrl('Medicine Ball Slam'),
   },
 ];
