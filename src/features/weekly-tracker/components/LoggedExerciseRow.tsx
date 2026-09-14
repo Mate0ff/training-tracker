@@ -12,22 +12,26 @@ export interface LoggedExerciseRowProps {
   onDelete: (id: string) => Promise<void>;
 }
 
-function formatSets(sets: SetEntry[]): string {
-  return sets.map((s) => `${s.reps}×${s.weight}kg`).join(', ');
-}
+type RowView = 'detail' | 'edit' | 'delete';
 
-/** One logged exercise within a day: name, sets summary, edit + delete actions. */
+/**
+ * One logged exercise within a day: a compact name-only chip. Clicking it
+ * opens a modal with the set/rep/weight detail, plus edit and delete
+ * actions — keeps the day card itself to just exercise names.
+ */
 export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: LoggedExerciseRowProps) {
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [view, setView] = useState<RowView>();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const exerciseName = exercise?.name ?? 'Unknown exercise';
+  const close = () => setView(undefined);
 
   const handleUpdate = async (sets: SetEntry[], notes: string | undefined) => {
     setIsSaving(true);
     try {
       await onUpdate(entry.id, { sets, notes });
-      setIsEditOpen(false);
+      close();
     } finally {
       setIsSaving(false);
     }
@@ -37,75 +41,80 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
     setIsDeleting(true);
     try {
       await onDelete(entry.id);
-      setIsDeleteOpen(false);
+      close();
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <div className="group flex items-start justify-between gap-2 rounded-md border border-border bg-bg px-3 py-2">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          {exercise && (
-            <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: bodyPartColors[exercise.bodyPart] }}
-              aria-hidden="true"
-            />
-          )}
-          <span className="truncate text-sm font-medium text-text-primary">
-            {exercise?.name ?? 'Unknown exercise'}
-          </span>
-        </div>
-        <p className="mt-0.5 text-xs text-text-secondary">{formatSets(entry.sets)}</p>
-        {entry.notes && <p className="mt-0.5 truncate text-xs text-text-tertiary">{entry.notes}</p>}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsEditOpen(true)}
-          aria-label={`Edit ${exercise?.name ?? 'exercise'}`}
-        >
-          <Pencil size={14} />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsDeleteOpen(true)}
-          aria-label={`Delete ${exercise?.name ?? 'exercise'}`}
-        >
-          <Trash2 size={14} />
-        </Button>
-      </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setView('detail')}
+        className="flex w-full items-center gap-2 rounded-md border border-border bg-bg px-3 py-2 text-left transition-colors hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        {exercise && (
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            style={{ backgroundColor: bodyPartColors[exercise.bodyPart] }}
+            aria-hidden="true"
+          />
+        )}
+        <span className="truncate text-sm font-medium text-text-primary">{exerciseName}</span>
+      </button>
 
       <Modal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        title={`Edit ${exercise?.name ?? 'exercise'}`}
+        isOpen={view === 'detail'}
+        onClose={close}
+        title={exerciseName}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setView('delete')}>
+              <Trash2 size={14} />
+              Delete
+            </Button>
+            <Button variant="secondary" onClick={() => setView('edit')}>
+              <Pencil size={14} />
+              Edit
+            </Button>
+          </>
+        }
       >
+        <div className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-1.5">
+            {entry.sets.map((s) => (
+              <li key={s.setNumber} className="flex items-center justify-between text-sm">
+                <span className="text-text-tertiary">Set {s.setNumber}</span>
+                <span className="font-medium text-text-primary">
+                  {s.reps} reps × {s.weight} kg
+                </span>
+              </li>
+            ))}
+          </ul>
+          {entry.notes && <p className="text-xs text-text-tertiary">{entry.notes}</p>}
+        </div>
+      </Modal>
+
+      <Modal isOpen={view === 'edit'} onClose={() => setView('detail')} title={`Edit ${exerciseName}`}>
         <SetsRepsWeightForm
-          exerciseName={exercise?.name ?? 'Exercise'}
+          exerciseName={exerciseName}
           initialSets={entry.sets}
           initialNotes={entry.notes}
           submitLabel="Save changes"
           isSubmitting={isSaving}
           onSubmit={handleUpdate}
-          onCancel={() => setIsEditOpen(false)}
+          onCancel={() => setView('detail')}
         />
       </Modal>
 
       <Modal
-        isOpen={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
+        isOpen={view === 'delete'}
+        onClose={() => setView('detail')}
         title="Delete logged exercise?"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsDeleteOpen(false)} disabled={isDeleting}>
+            <Button variant="ghost" onClick={() => setView('detail')} disabled={isDeleting}>
               Cancel
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
@@ -115,10 +124,9 @@ export function LoggedExerciseRow({ entry, exercise, onUpdate, onDelete }: Logge
         }
       >
         <p className="text-sm text-text-secondary">
-          This removes {exercise?.name ?? 'this exercise'} ({formatSets(entry.sets)}) from{' '}
-          {entry.date}. This can't be undone.
+          This removes {exerciseName} from {entry.date}. This can't be undone.
         </p>
       </Modal>
-    </div>
+    </>
   );
 }
