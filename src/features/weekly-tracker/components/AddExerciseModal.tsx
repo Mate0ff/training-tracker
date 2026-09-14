@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Modal } from '../../../components';
 import { ExercisePicker } from '../../exercise-library';
 import type { Exercise, SetEntry } from '../../../lib/data/types';
@@ -36,10 +36,29 @@ export function AddExerciseModal({
 }: AddExerciseModalProps) {
   const [selectedExercise, setSelectedExercise] = useState<Exercise>();
   const [isSaving, setIsSaving] = useState(false);
+  // ExercisePicker's handleSelect calls onSelect(exercise) then onClose()
+  // synchronously — both state updates land in the same batch, so a plain
+  // onClose={handleClose} would immediately clobber the just-picked
+  // exercise back to undefined. This ref lets handlePickerClose tell "closed
+  // because a selection was made" apart from "closed via cancel/backdrop".
+  const justSelectedRef = useRef(false);
 
   const handleClose = () => {
     setSelectedExercise(undefined);
     onClose();
+  };
+
+  const handlePickerSelect = (exercise: Exercise) => {
+    justSelectedRef.current = true;
+    setSelectedExercise(exercise);
+  };
+
+  const handlePickerClose = () => {
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return; // selection in progress — move to the sets-form step, don't close the flow
+    }
+    handleClose();
   };
 
   const handleSubmit = async (
@@ -78,5 +97,5 @@ export function AddExerciseModal({
     );
   }
 
-  return <ExercisePicker isOpen={isOpen} onClose={handleClose} onSelect={setSelectedExercise} />;
+  return <ExercisePicker isOpen={isOpen} onClose={handlePickerClose} onSelect={handlePickerSelect} />;
 }
